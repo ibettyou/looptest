@@ -88,12 +88,9 @@ namespace Loopback
                 ((DataGridTemplateColumn)dgLoopback.Columns[0]).Header = resources["ExemptColumn"];
                 ((DataGridTextColumn)dgLoopback.Columns[1]).Header = resources["AppNameColumn"];
 
-                // 更新状态栏文本
-                var statusBarItem = (SBar.Items[0] as Control)?.Content as TextBlock;
-                if (statusBarItem != null)
-                {
-                    statusBarItem.Text = resources["StatusLabel"];
-                }
+                // 更新状态栏文本 - 使用名称直接访问TextBlock
+                txtStatus.Inlines.Clear();
+                txtStatus.Inlines.Add(new Run(resources["StatusLabel"]));
             }
             catch (Exception ex)
             {
