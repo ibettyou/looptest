@@ -63,9 +63,6 @@ namespace Loopback
         {
             try
             {
-                ResourceDictionary dict = new ResourceDictionary();
-                dict.Source = new Uri("/Strings;component", UriKind.Relative);
-                
                 var resources = new Dictionary<string, string>();
                 resources["WindowTitle"] = _resourceManager.GetString("WindowTitle", _currentCulture) ?? "Loopback Exemption Manager";
                 resources["SaveButton"] = _resourceManager.GetString("SaveButton", _currentCulture) ?? "Save";
