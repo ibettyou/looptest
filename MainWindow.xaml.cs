@@ -1,114 +1,40 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using System.Globalization;
-using System.Resources;
-using System.Reflection;
 
 namespace Loopback
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
     {
         private LoopUtil _loop;
-        private bool isDirty=false;
-        private ResourceManager _resourceManager;
-        private CultureInfo _currentCulture;
+        private bool _hasUnsavedChanges;
+        private bool _isChinese = true;
 
         public MainWindow()
         {
-            try
-            {
-                InitializeComponent();
-                _loop = new LoopUtil();
-                _currentCulture = CultureInfo.CurrentUICulture;
-                LoadResources();
-                dgLoopback.ItemsSource = _loop.Apps;
-                ICollectionView cvApps = CollectionViewSource.GetDefaultView(dgLoopback.ItemsSource);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error initializing application: {ex.Message}\n\nStack Trace:\n{ex.StackTrace}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        private void LoadResources()
-        {
-            try
-            {
-                _resourceManager = new ResourceManager("Loopback.Strings", Assembly.GetExecutingAssembly());
-                ApplyResources();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error loading resources: {ex.Message}", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-        }
-
-        private void ApplyResources()
-        {
-            try
-            {
-                var resources = new Dictionary<string, string>();
-                resources["WindowTitle"] = _resourceManager.GetString("WindowTitle", _currentCulture) ?? "Loopback Exemption Manager";
-                resources["SaveButton"] = _resourceManager.GetString("SaveButton", _currentCulture) ?? "Save";
-                resources["RefreshButton"] = _resourceManager.GetString("RefreshButton", _currentCulture) ?? "Refresh";
-                resources["ExemptColumn"] = _resourceManager.GetString("ExemptColumn", _currentCulture) ?? "Exempt";
-                resources["AppNameColumn"] = _resourceManager.GetString("AppNameColumn", _currentCulture) ?? "App Name";
-                resources["StatusLabel"] = _resourceManager.GetString("StatusLabel", _currentCulture) ?? "Status:";
-                resources["LanguageButton"] = _resourceManager.GetString("LanguageButton", _currentCulture) ?? "中文";
-                resources["SelectAllButton"] = _resourceManager.GetString("SelectAllButton", _currentCulture) ?? "Select All";
-                resources["DeselectAllButton"] = _resourceManager.GetString("DeselectAllButton", _currentCulture) ?? "Deselect All";
-
-                // 更新窗口标题
-                this.Title = resources["WindowTitle"];
-
-                // 更新按钮内容
-                btnLanguage.Content = resources["LanguageButton"];
-                btnSave.Content = resources["SaveButton"];
-                btnRefresh.Content = resources["RefreshButton"];
-                btnSelectAll.Content = resources["SelectAllButton"];
-                btnDeselectAll.Content = resources["DeselectAllButton"];
-
-                // 更新DataGrid列标题
-                ((DataGridTemplateColumn)dgLoopback.Columns[0]).Header = resources["ExemptColumn"];
-                ((DataGridTextColumn)dgLoopback.Columns[1]).Header = resources["AppNameColumn"];
-
-                // 更新状态栏文本 - 使用名称直接访问TextBlock
-                txtStatus.Inlines.Clear();
-                txtStatus.Inlines.Add(new Run(resources["StatusLabel"]));
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error applying resources: {ex.Message}", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
+            InitializeComponent();
+            _loop = new LoopUtil();
+            dgLoopback.ItemsSource = _loop.Apps;
         }
 
         private void btnLanguage_Click(object sender, RoutedEventArgs e)
         {
-            if (_currentCulture.Name == "zh-CN")
-            {
-                _currentCulture = new CultureInfo("en");
-            }
-            else
-            {
-                _currentCulture = new CultureInfo("zh-CN");
-            }
-            ApplyResources();
+            _isChinese = !_isChinese;
+            UpdateUIText();
+        }
+
+        private void UpdateUIText()
+        {
+            btnLanguage.Content = _isChinese ? "English" : "中文";
+            btnSelectAll.Content = _isChinese ? "全选" : "Select All";
+            btnDeselectAll.Content = _isChinese ? "全不选" : "Deselect All";
+            btnSave.Content = _isChinese ? "保存" : "Save";
+            btnRefresh.Content = _isChinese ? "刷新" : "Refresh";
+            ((DataGridTemplateColumn)dgLoopback.Columns[0]).Header = _isChinese ? "豁免" : "Exempt";
+            ((DataGridTextColumn)dgLoopback.Columns[1]).Header = _isChinese ? "应用名称" : "App Name";
         }
 
         private void btnSelectAll_Click(object sender, RoutedEventArgs e)
@@ -118,7 +44,8 @@ namespace Loopback
                 app.LoopUtil = true;
             }
             dgLoopback.Items.Refresh();
-            isDirty = true;
+            _hasUnsavedChanges = true;
+            Log(_isChinese ? "已全选" : "All selected");
         }
 
         private void btnDeselectAll_Click(object sender, RoutedEventArgs e)
@@ -128,61 +55,64 @@ namespace Loopback
                 app.LoopUtil = false;
             }
             dgLoopback.Items.Refresh();
-            isDirty = true;
+            _hasUnsavedChanges = true;
+            Log(_isChinese ? "已全不选" : "All deselected");
         }
-
 
         private void btnSave_Click(object sender, RoutedEventArgs e)
         {
-            if (!isDirty) 
+            if (!_hasUnsavedChanges)
             {
-                Log(_resourceManager.GetString("NothingToSave", _currentCulture));
-                return; 
+                Log(_isChinese ? "没有需要保存的更改" : "No changes to save");
+                return;
             }
 
-            isDirty = false;
+            _hasUnsavedChanges = false;
             if (_loop.SaveLoopbackState())
-            { 
-                Log(_resourceManager.GetString("SavedExemptions", _currentCulture));
+            {
+                Log(_isChinese ? "已保存" : "Saved successfully");
             }
             else
-            { Log(_resourceManager.GetString("ErrorSaving", _currentCulture)); }
+            {
+                Log(_isChinese ? "保存失败" : "Save failed");
+            }
         }
 
         private void btnRefresh_Click(object sender, RoutedEventArgs e)
         {
             _loop.LoadApps();
             dgLoopback.Items.Refresh();
-            isDirty = false;
-            Log(_resourceManager.GetString("Refreshed", _currentCulture));
-        }
-
-        private void Window_Closing(object sender, CancelEventArgs e)
-        {
-            if (isDirty)
-            {
-                string title = _resourceManager.GetString("UnsavedChangesTitle", _currentCulture);
-                string message = _resourceManager.GetString("UnsavedChangesMessage", _currentCulture);
-                MessageBoxResult resp=System.Windows.MessageBox.Show(message, title, MessageBoxButton.YesNo, MessageBoxImage.Question);
-                if (resp==MessageBoxResult.No)
-                {
-                    e.Cancel = true;
-                    return;
-                }
-
-            }
-            _loop.FreeResources();
+            _hasUnsavedChanges = false;
+            Log(_isChinese ? "已刷新" : "Refreshed");
         }
 
         private void dgcbLoop_Click(object sender, RoutedEventArgs e)
         {
-            isDirty=true;
+            _hasUnsavedChanges = true;
         }
 
-        private void Log(String logtxt) 
+        private void dgLoopback_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-                txtStatus.Text = DateTime.Now.ToString("hh:mm:ss.fff ") + logtxt;
         }
 
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            if (_hasUnsavedChanges)
+            {
+                string title = _isChinese ? "确认" : "Confirm";
+                string message = _isChinese ? "有未保存的更改，确定要退出吗？" : "You have unsaved changes. Are you sure you want to exit?";
+                if (MessageBox.Show(message, title, MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.No)
+                {
+                    e.Cancel = true;
+                    return;
+                }
+            }
+            _loop.FreeResources();
+        }
+
+        private void Log(string message)
+        {
+            txtStatus.Text = $"{DateTime.Now:HH:mm:ss.fff} {message}";
+        }
     }
 }

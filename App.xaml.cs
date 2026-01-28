@@ -1,35 +1,32 @@
 using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Windows;
 
 namespace Loopback
 {
-    /// <summary>
-    /// Interaction logic for App.xaml
-    /// </summary>
     public partial class App : Application
     {
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
-            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
-            DispatcherUnhandledException += App_DispatcherUnhandledException;
+            AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
+            Current.DispatcherUnhandledException += OnDispatcherUnhandledException;
         }
 
-        private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        private void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            Exception ex = e.ExceptionObject as Exception;
-            MessageBox.Show($"Unhandled exception: {ex?.Message}\n\nStack Trace:\n{ex?.StackTrace}", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            var ex = e.ExceptionObject as Exception;
+            ShowErrorDialog("Fatal Error", ex?.Message ?? "Unknown error", ex?.StackTrace);
         }
 
-        private void App_DispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
+        private void OnDispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
         {
-            MessageBox.Show($"Dispatcher unhandled exception: {e.Exception.Message}\n\nStack Trace:\n{e.Exception.StackTrace}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            ShowErrorDialog("Error", e.Exception.Message, e.Exception.StackTrace);
             e.Handled = true;
+        }
+
+        private void ShowErrorDialog(string title, string message, string stackTrace)
+        {
+            MessageBox.Show($"{message}\n\nStack Trace:\n{stackTrace}", title, MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 }
