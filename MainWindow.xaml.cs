@@ -74,13 +74,22 @@ namespace Loopback
                 resources["SelectAllButton"] = _resourceManager.GetString("SelectAllButton", _currentCulture) ?? "Select All";
                 resources["DeselectAllButton"] = _resourceManager.GetString("DeselectAllButton", _currentCulture) ?? "Deselect All";
 
-                foreach (var key in resources.Keys)
-                {
-                    this.Resources[key] = resources[key];
-                }
-
+                // 更新窗口标题
                 this.Title = resources["WindowTitle"];
+
+                // 更新按钮内容
                 btnLanguage.Content = resources["LanguageButton"];
+                btnSave.Content = resources["SaveButton"];
+                btnRefresh.Content = resources["RefreshButton"];
+                btnSelectAll.Content = resources["SelectAllButton"];
+                btnDeselectAll.Content = resources["DeselectAllButton"];
+
+                // 更新DataGrid列标题
+                ((DataGridTemplateColumn)dgLoopback.Columns[0]).Header = resources["ExemptColumn"];
+                ((DataGridTextColumn)dgLoopback.Columns[1]).Header = resources["AppNameColumn"];
+
+                // 更新状态栏文本
+                ((TextBlock)((StatusBarItem)SBar.Items[0]).Content).Text = resources["StatusLabel"];
             }
             catch (Exception ex)
             {
