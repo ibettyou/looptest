@@ -31,44 +31,64 @@ namespace Loopback
 
         public MainWindow()
         {
-            InitializeComponent();
-            _loop = new LoopUtil();
-            _currentCulture = CultureInfo.CurrentUICulture;
-            LoadResources();
-            dgLoopback.ItemsSource = _loop.Apps;
-            ICollectionView cvApps = CollectionViewSource.GetDefaultView(dgLoopback.ItemsSource);
-
+            try
+            {
+                InitializeComponent();
+                _loop = new LoopUtil();
+                _currentCulture = CultureInfo.CurrentUICulture;
+                LoadResources();
+                dgLoopback.ItemsSource = _loop.Apps;
+                ICollectionView cvApps = CollectionViewSource.GetDefaultView(dgLoopback.ItemsSource);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error initializing application: {ex.Message}\n\nStack Trace:\n{ex.StackTrace}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void LoadResources()
         {
-            _resourceManager = new ResourceManager("Loopback.Strings", Assembly.GetExecutingAssembly());
-            ApplyResources();
+            try
+            {
+                _resourceManager = new ResourceManager("Loopback.Strings", Assembly.GetExecutingAssembly());
+                ApplyResources();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading resources: {ex.Message}", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
 
         private void ApplyResources()
         {
-            ResourceDictionary dict = new ResourceDictionary();
-            dict.Source = new Uri("/Strings;component", UriKind.Relative);
-            
-            var resources = new Dictionary<string, string>();
-            resources["WindowTitle"] = _resourceManager.GetString("WindowTitle", _currentCulture);
-            resources["SaveButton"] = _resourceManager.GetString("SaveButton", _currentCulture);
-            resources["RefreshButton"] = _resourceManager.GetString("RefreshButton", _currentCulture);
-            resources["ExemptColumn"] = _resourceManager.GetString("ExemptColumn", _currentCulture);
-            resources["AppNameColumn"] = _resourceManager.GetString("AppNameColumn", _currentCulture);
-            resources["StatusLabel"] = _resourceManager.GetString("StatusLabel", _currentCulture);
-            resources["LanguageButton"] = _resourceManager.GetString("LanguageButton", _currentCulture);
-            resources["SelectAllButton"] = _resourceManager.GetString("SelectAllButton", _currentCulture);
-            resources["DeselectAllButton"] = _resourceManager.GetString("DeselectAllButton", _currentCulture);
-
-            foreach (var key in resources.Keys)
+            try
             {
-                this.Resources[key] = resources[key];
-            }
+                ResourceDictionary dict = new ResourceDictionary();
+                dict.Source = new Uri("/Strings;component", UriKind.Relative);
+                
+                var resources = new Dictionary<string, string>();
+                resources["WindowTitle"] = _resourceManager.GetString("WindowTitle", _currentCulture) ?? "Loopback Exemption Manager";
+                resources["SaveButton"] = _resourceManager.GetString("SaveButton", _currentCulture) ?? "Save";
+                resources["RefreshButton"] = _resourceManager.GetString("RefreshButton", _currentCulture) ?? "Refresh";
+                resources["ExemptColumn"] = _resourceManager.GetString("ExemptColumn", _currentCulture) ?? "Exempt";
+                resources["AppNameColumn"] = _resourceManager.GetString("AppNameColumn", _currentCulture) ?? "App Name";
+                resources["StatusLabel"] = _resourceManager.GetString("StatusLabel", _currentCulture) ?? "Status:";
+                resources["LanguageButton"] = _resourceManager.GetString("LanguageButton", _currentCulture) ?? "中文";
+                resources["SelectAllButton"] = _resourceManager.GetString("SelectAllButton", _currentCulture) ?? "Select All";
+                resources["DeselectAllButton"] = _resourceManager.GetString("DeselectAllButton", _currentCulture) ?? "Deselect All";
 
-            this.Title = resources["WindowTitle"];
-            btnLanguage.Content = resources["LanguageButton"];
+                foreach (var key in resources.Keys)
+                {
+                    this.Resources[key] = resources[key];
+                }
+
+                this.Title = resources["WindowTitle"];
+                btnLanguage.Content = resources["LanguageButton"];
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error applying resources: {ex.Message}", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
 
         private void btnLanguage_Click(object sender, RoutedEventArgs e)
