@@ -24,17 +24,8 @@ jobs:
     - name: Restore NuGet packages
       run: nuget restore Loopback.csproj
 
-    - name: Build Debug
-      run: msbuild Loopback.csproj /p:Configuration=Debug /p:Platform="Any CPU" /v:m
-
     - name: Build Release
-      run: msbuild Loopback.csproj /p:Configuration=Release /p:Platform="Any CPU" /v:m
-
-    - name: Upload Debug artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: WindowsLoopbackManager-Debug
-        path: bin\Debug\
+      run: msbuild Loopback.csproj /p:Configuration=Release /p:Platform=AnyCPU /v:m
 
     - name: Upload Release artifacts
       uses: actions/upload-artifact@v4
