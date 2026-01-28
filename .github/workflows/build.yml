@@ -1,0 +1,43 @@
+name: Build .NET Framework Project
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Setup NuGet
+      uses: NuGet/setup-nuget@v2
+
+    - name: Restore NuGet packages
+      run: nuget restore Loopback.csproj
+
+    - name: Build Debug
+      run: msbuild Loopback.csproj /p:Configuration=Debug /p:Platform="Any CPU" /v:m
+
+    - name: Build Release
+      run: msbuild Loopback.csproj /p:Configuration=Release /p:Platform="Any CPU" /v:m
+
+    - name: Upload Debug artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: WindowsLoopbackManager-Debug
+        path: bin\Debug\
+
+    - name: Upload Release artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: WindowsLoopbackManager-Release
+        path: bin\Release\
